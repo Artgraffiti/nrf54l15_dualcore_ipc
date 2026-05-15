@@ -1,0 +1,22 @@
+config DEMO_JOB_COUNT
+	int "Number of ping-pong iterations sent by CPUAPP"
+	default 100000
+	range 1 1000000
+	help
+	  Total number of request/response exchanges measured by the benchmark.
+
+config DEMO_PAYLOAD_SIZE
+	int "Payload size in bytes per message"
+	default 32
+	range 1 256
+	help
+	  Fixed payload size embedded into each IPC message. Increase this value
+	  to measure how exchange frequency changes with larger messages.
+
+config DEMO_PROGRESS_INTERVAL
+	int "Progress print interval in iterations"
+	default 10000
+	range 0 1000000
+	help
+	  Print a progress line after this many completed round trips. Set to 0
+	  to disable intermediate progress logging.

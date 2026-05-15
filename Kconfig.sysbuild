@@ -1,0 +1,5 @@
+source "share/sysbuild/Kconfig"
+
+config REMOTE_BOARD
+	string "Board used for the remote CPUFLPR image"
+	default "nrf54l15_connectkit/nrf54l15/cpuflpr" if BOARD_NRF54L15_CONNECTKIT_NRF54L15_CPUAPP
