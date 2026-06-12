@@ -23,6 +23,17 @@
 - настройки `ipc_service` на `nRF54L15`;
 - оценки предельной частоты IPC-обмена на реальной плате.
 
+## Структура проекта
+
+```text
+nrf54l15_dualcore_ipc/
+├── cpuapp/        # приложение для Cortex-M33
+├── cpuflpr/       # приложение для RISC-V CPUFLPR
+├── include/       # общие заголовки для обоих образов
+├── Kconfig.common # общие Kconfig-параметры benchmark
+└── docs/
+```
+
 ## Схема работы
 
 ```text
@@ -143,7 +154,7 @@ west build \
   -p always \
   -b nrf54l15_connectkit/nrf54l15/cpuapp \
   --sysbuild \
-  .
+  cpuapp
 ```
 
 Конфигурация запуска `CPUFLPR` добавлена в overlay проекта. Отдельный
@@ -161,41 +172,41 @@ build
 Полезные подкаталоги:
 
 ```text
-build/remote
-build/nrf54l15_dualcore_ipc
+build/cpuflpr
+build/cpuapp
 build/domains.yaml
 ```
 
 Повторная сборка без очистки:
 
 ```fish
-west build
+west build -d build
 ```
 
 Полностью чистая пересборка:
 
 ```fish
-west build -p always -b nrf54l15_connectkit/nrf54l15/cpuapp --sysbuild .
+west build -p always -b nrf54l15_connectkit/nrf54l15/cpuapp --sysbuild cpuapp
 ```
 
 ## Прошивка
 
 Этот проект собирается через `sysbuild`, поэтому прошивать нужно **оба домена**:
 
-1. `remote` - образ для `CPUFLPR`
-2. `nrf54l15_dualcore_ipc` - образ для `CPUAPP`
+1. `cpuflpr` - образ для `CPUFLPR`
+2. `cpuapp` - образ для `CPUAPP`
 
 Практически это выглядит так:
 
 ```fish
 source ~/NCS-Project/.venv/bin/activate.fish
-west flash -d build --domain remote --skip-rebuild --target nrf54l
-west flash -d build --domain nrf54l15_dualcore_ipc --skip-rebuild --target nrf54l
+west flash -d build --domain cpuflpr --skip-rebuild --target nrf54l
+west flash -d build --domain cpuapp --skip-rebuild --target nrf54l
 ```
 
 ## Настройка benchmark
 
-Основные параметры задаются через Kconfig в `prj.conf` и `remote/prj.conf`:
+Основные параметры задаются через Kconfig в `cpuapp/prj.conf` и `cpuflpr/prj.conf`:
 
 - `CONFIG_DEMO_PAYLOAD_SIZE` - размер payload в каждом сообщении
 - `CONFIG_DEMO_JOB_COUNT` - число round-trip итераций в одном прогоне
@@ -215,22 +226,22 @@ west flash -d build --domain nrf54l15_dualcore_ipc --skip-rebuild --target nrf54
 
 Почему именно так:
 
-- `west flash -d build/nrf54l15_dualcore_ipc` прошивает только `CPUAPP`
+- `west flash -d build/cpuapp` прошивает только `CPUAPP`
 - `CPUFLPR` при этом остаётся со старой прошивкой
 - это выглядит так, будто "ничего не поменялось", хотя main-образ уже обновился
 
 Если нужен полный erase перед перепрошивкой:
 
 ```fish
-west flash -d build/nrf54l15_dualcore_ipc --erase --skip-rebuild
-west flash -d build --domain remote --skip-rebuild --target nrf54l
+west flash -d build/cpuapp --erase --skip-rebuild
+west flash -d build --domain cpuflpr --skip-rebuild --target nrf54l
 ```
 
 Если подключено несколько отладчиков, добавляйте `--dev-id` к каждой команде:
 
 ```fish
-west flash -d build --domain remote --skip-rebuild --target nrf54l --dev-id <probe-id>
-west flash -d build --domain nrf54l15_dualcore_ipc --skip-rebuild --target nrf54l --dev-id <probe-id>
+west flash -d build --domain cpuflpr --skip-rebuild --target nrf54l --dev-id <probe-id>
+west flash -d build --domain cpuapp --skip-rebuild --target nrf54l --dev-id <probe-id>
 ```
 
 ## Монитор порта
@@ -355,8 +366,8 @@ ifsh:~$
 ```fish
 cd ~/NCS-Project/OwnApps/nrf54l15_dualcore_ipc
 source ~/NCS-Project/.venv/bin/activate.fish
-west build -p always -b nrf54l15_connectkit/nrf54l15/cpuapp --sysbuild .
-west flash -d build --domain remote --skip-rebuild --target nrf54l
-west flash -d build --domain nrf54l15_dualcore_ipc --skip-rebuild --target nrf54l
+west build -p always -b nrf54l15_connectkit/nrf54l15/cpuapp --sysbuild cpuapp
+west flash -d build --domain cpuflpr --skip-rebuild --target nrf54l
+west flash -d build --domain cpuapp --skip-rebuild --target nrf54l
 screen /dev/ttyACM0 115200
 ```
